@@ -16,6 +16,6 @@ alembic
 email-validator
 
 python-dotenv
-
+psycopg2-binary
 pytest
 httpx
