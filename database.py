@@ -6,7 +6,7 @@ def get_db_connection():
         port=21960,
         user="avnadmin",
         password="AVNS_ncZYEMIRSIeUob-rnZU",
-        database="defaultdb",
+        database="labour_app",
         ssl={"ssl": {}},
         cursorclass=pymysql.cursors.DictCursor
     )
