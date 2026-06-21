@@ -165,10 +165,14 @@ def logout(user_id: int):
     cursor.execute(
         """
         UPDATE login_history
-        SET logout_time=NOW()
-        WHERE user_id=%s
-        ORDER BY id DESC
-        LIMIT 1
+        SET logout_time = NOW()
+        WHERE id = (
+            SELECT id
+            FROM login_history
+            WHERE user_id = %s
+            ORDER BY id DESC
+            LIMIT 1
+        )
         """,
         (user_id,)
     )
