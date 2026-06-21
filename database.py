@@ -1,12 +1,10 @@
-import os
-import psycopg2
+import psycopg
+from psycopg.rows import dict_row
+
+DATABASE_URL = "postgresql://neondb_owner:YOUR_PASSWORD@ep-summer-brook-atq95usp-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require"
 
 def get_db_connection():
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
-        database=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        sslmode="require"
+    return psycopg.connect(
+        DATABASE_URL,
+        row_factory=dict_row
     )
