@@ -12,3 +12,9 @@ class ChangePasswordRequest(BaseModel):
     mobile: str
     old_password: str
     new_password: str
+
+class Labour(BaseModel):
+    name: str
+    mobile: str
+    age: int
+    skill: str
