@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from database import get_db_connection
+from database import get_db
 from schemas import *
 
 app = FastAPI()
@@ -7,7 +7,7 @@ app = FastAPI()
 @app.post("/register")
 def register(data: RegisterRequest):
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -39,7 +39,7 @@ def register(data: RegisterRequest):
 @app.post("/login")
 def login(data: LoginRequest):
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -80,7 +80,7 @@ def login(data: LoginRequest):
 @app.put("/change-password")
 def change_password(data: ChangePasswordRequest):
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -127,7 +127,7 @@ def change_password(data: ChangePasswordRequest):
 @app.get("/profile/{mobile}")
 def get_profile(mobile: str):
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -159,7 +159,7 @@ def get_profile(mobile: str):
 @app.post("/logout")
 def logout(user_id: int):
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute(
