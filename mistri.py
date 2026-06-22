@@ -147,10 +147,9 @@ def get_profile(mobile: str):
         db.close()
 
 
-@app.post("/logout")
-def logout():
-
+@app.post("/logout/{user_id}")
+def logout(user_id: int):
     return {
-        "message":
-        "Logout Successful"
+        "message": "Logout Successful",
+        "user_id": user_id
     }
