@@ -1,9 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from database import SessionLocal
 from schemas import *
-from models import User
 from security import hash_password, verify_password
-
+from models import User, WorkerProfile
 app = FastAPI()
 
 
@@ -153,3 +152,119 @@ def logout(user_id: int):
         "message": "Logout Successful",
         "user_id": user_id
     }
+
+
+
+@app.post("/worker-profile")
+def create_worker_profile(
+    data: WorkerProfileSchema
+):
+
+    db = SessionLocal()
+
+    try:
+
+        profile = WorkerProfile(
+            **data.dict()
+        )
+
+        db.add(profile)
+        db.commit()
+
+        return {
+            "message":
+            "Worker Profile Created Successfully"
+        }
+
+    finally:
+        db.close()
+
+
+@app.get("/worker-profile/{user_id}")
+def get_worker_profile(user_id: int):
+
+    db = SessionLocal()
+
+    try:
+
+        profile = db.query(
+            WorkerProfile
+        ).filter(
+            WorkerProfile.user_id == user_id
+        ).first()
+
+        if not profile:
+            raise HTTPException(
+                status_code=404,
+                detail="Profile not found"
+            )
+
+        return profile
+
+    finally:
+        db.close()
+
+@app.put("/worker-profile/{user_id}")
+def update_worker_profile(
+    user_id: int,
+    data: WorkerProfileSchema
+):
+
+    db = SessionLocal()
+
+    try:
+
+        profile = db.query(
+            WorkerProfile
+        ).filter(
+            WorkerProfile.user_id == user_id
+        ).first()
+
+        if not profile:
+            raise HTTPException(
+                status_code=404,
+                detail="Profile not found"
+            )
+
+        for key, value in data.dict().items():
+            setattr(profile, key, value)
+
+        db.commit()
+
+        return {
+            "message":
+            "Profile Updated Successfully"
+        }
+
+    finally:
+        db.close()
+
+@app.delete("/worker-profile/{user_id}")
+def delete_worker_profile(user_id: int):
+
+    db = SessionLocal()
+
+    try:
+
+        profile = db.query(
+            WorkerProfile
+        ).filter(
+            WorkerProfile.user_id == user_id
+        ).first()
+
+        if not profile:
+            raise HTTPException(
+                status_code=404,
+                detail="Profile not found"
+            )
+
+        db.delete(profile)
+        db.commit()
+
+        return {
+            "message":
+            "Profile Deleted Successfully"
+        }
+
+    finally:
+        db.close()
