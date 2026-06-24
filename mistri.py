@@ -199,10 +199,7 @@ def get_worker_profile(user_id: int):
     db = SessionLocal()
 
     try:
-
-        profile = db.query(
-            Worker
-        ).filter(
+        profile = db.query(Worker).filter(
             Worker.user_id == user_id
         ).first()
 
@@ -216,7 +213,6 @@ def get_worker_profile(user_id: int):
 
     finally:
         db.close()
-
 @app.put("/worker-profile/{user_id}")
 def update_worker_profile(
     user_id: int,
@@ -226,9 +222,7 @@ def update_worker_profile(
     db = SessionLocal()
 
     try:
-        profile = db.query(
-            Worker
-        ).filter(
+        profile = db.query(Worker).filter(
             Worker.user_id == user_id
         ).first()
 
@@ -238,30 +232,42 @@ def update_worker_profile(
                 detail="Profile not found"
             )
 
-        for key, value in data.dict().items():
-            setattr(profile, key, value)
+        profile.name = data.name
+        profile.email = data.email
+        profile.mobile = data.mobile
+        profile.gender = data.gender
+        profile.date_of_birth = data.date_of_birth
+        profile.address = data.address
+        profile.city = data.city
+        profile.state = data.state
+        profile.pincode = data.pincode
+        profile.category_id = data.category_id
+        profile.experience_years = data.experience_years
+        profile.skills = data.skills
+        profile.about = data.about
+        profile.aadhaar_number = data.aadhaar_number
+        profile.profile_image = data.profile_image
+        profile.aadhaar_front = data.aadhaar_front
+        profile.aadhaar_back = data.aadhaar_back
 
         db.commit()
 
         return {
-            "message":
-            "Profile Updated Successfully"
+            "message": "Profile Updated Successfully"
         }
 
     finally:
         db.close()
-
 @app.delete("/worker-profile/{user_id}")
 def delete_worker_profile(user_id: int):
 
     db = SessionLocal()
 
     try:
-        profile = db.query(
-            Worker
-        ).filter(
+        profile = db.query(Worker).filter(
             Worker.user_id == user_id
         ).first()
+
         if not profile:
             raise HTTPException(
                 status_code=404,
@@ -272,8 +278,7 @@ def delete_worker_profile(user_id: int):
         db.commit()
 
         return {
-            "message":
-            "Profile Deleted Successfully"
+            "message": "Profile Deleted Successfully"
         }
 
     finally:
