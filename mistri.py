@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.orm import Session
+
 from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
@@ -153,14 +155,9 @@ def logout(user_id: int):
         "user_id": user_id
     }
 
-
-
-from fastapi import Depends, HTTPException
-from sqlalchemy.orm import Session
-
 @app.post("/worker-profile")
 def create_worker_profile(
-    data: WorkerProfileSchema,
+    data: WorkerCreate,
     db: Session = Depends(get_db)
 ):
 
@@ -193,92 +190,91 @@ def create_worker_profile(
         "message": "Worker Profile Created Successfully",
         "worker_id": worker.id
     }
-@app.get("/worker-profile/{user_id}")
-def get_worker_profile(user_id: int):
+@app.get("/worker-profile/{worker_id}")
+def get_worker_profile(worker_id: int):
 
     db = SessionLocal()
 
     try:
         profile = db.query(Worker).filter(
-            Worker.user_id == user_id
+            Worker.id == worker_id
         ).first()
 
         if not profile:
             raise HTTPException(
                 status_code=404,
-                detail="Profile not found"
+                detail="Worker not found"
             )
 
         return profile
 
     finally:
         db.close()
-@app.put("/worker-profile/{user_id}")
-def update_worker_profile(
-    user_id: int,
-    data: WorkerProfileSchema
-):
+@app.put("/worker-profile/{worker_id}")
+def update_worker_profile(worker_id: int, worker_data: WorkerCreate):
 
     db = SessionLocal()
 
     try:
-        profile = db.query(Worker).filter(
-            Worker.user_id == user_id
+        worker = db.query(Worker).filter(
+            Worker.id == worker_id
         ).first()
 
-        if not profile:
+        if not worker:
             raise HTTPException(
                 status_code=404,
-                detail="Profile not found"
+                detail="Worker not found"
             )
 
-        profile.name = data.name
-        profile.email = data.email
-        profile.mobile = data.mobile
-        profile.gender = data.gender
-        profile.date_of_birth = data.date_of_birth
-        profile.address = data.address
-        profile.city = data.city
-        profile.state = data.state
-        profile.pincode = data.pincode
-        profile.category_id = data.category_id
-        profile.experience_years = data.experience_years
-        profile.skills = data.skills
-        profile.about = data.about
-        profile.aadhaar_number = data.aadhaar_number
-        profile.profile_image = data.profile_image
-        profile.aadhaar_front = data.aadhaar_front
-        profile.aadhaar_back = data.aadhaar_back
+        worker.name = worker_data.name
+        worker.email = worker_data.email
+        worker.mobile = worker_data.mobile
+        worker.gender = worker_data.gender
+        worker.date_of_birth = worker_data.date_of_birth
+        worker.address = worker_data.address
+        worker.city = worker_data.city
+        worker.state = worker_data.state
+        worker.pincode = worker_data.pincode
+        worker.category_id = worker_data.category_id
+        worker.experience_years = worker_data.experience_years
+        worker.skills = worker_data.skills
+        worker.about = worker_data.about
+        worker.aadhaar_number = worker_data.aadhaar_number
+        worker.profile_image = worker_data.profile_image
+        worker.aadhaar_front = worker_data.aadhaar_front
+        worker.aadhaar_back = worker_data.aadhaar_back
 
         db.commit()
+        db.refresh(worker)
 
         return {
-            "message": "Profile Updated Successfully"
+            "message": "Worker updated successfully",
+            "data": worker
         }
 
     finally:
         db.close()
-@app.delete("/worker-profile/{user_id}")
-def delete_worker_profile(user_id: int):
+@app.delete("/worker-profile/{worker_id}")
+def delete_worker_profile(worker_id: int):
 
     db = SessionLocal()
 
     try:
-        profile = db.query(Worker).filter(
-            Worker.user_id == user_id
+        worker = db.query(Worker).filter(
+            Worker.id == worker_id
         ).first()
 
-        if not profile:
+        if not worker:
             raise HTTPException(
                 status_code=404,
-                detail="Profile not found"
+                detail="Worker not found"
             )
 
-        db.delete(profile)
+        db.delete(worker)
         db.commit()
 
         return {
-            "message": "Profile Deleted Successfully"
+            "message": "Worker deleted successfully"
         }
 
     finally:

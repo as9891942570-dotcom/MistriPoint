@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
 from datetime import date
 
 class RegisterRequest(BaseModel):
@@ -21,29 +20,22 @@ class Labour(BaseModel):
     age: int
     skill: str
 
-class WorkerProfileSchema(BaseModel):
+
+class WorkerCreate(BaseModel):
     name: str
     email: str
     mobile: str
-
     gender: str
     date_of_birth: date
-
     address: str
     city: str
     state: str
     pincode: str
-
     category_id: int
-
     experience_years: int
-
     skills: str
-
     about: str
-
     aadhaar_number: str
-
     profile_image: str
     aadhaar_front: str
     aadhaar_back: str
