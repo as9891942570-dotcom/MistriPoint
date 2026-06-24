@@ -18,15 +18,13 @@ class User(Base):
         server_default=func.now()
     )
 
-class WorkerProfile(Base):
-    __tablename__ = "worker_profiles"
+class Worker(Base):
+    __tablename__ = "workers"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, unique=True)
-
     name = Column(String(100))
-    mobile = Column(String(15))
     email = Column(String(100))
+    mobile = Column(String(15))
 
     gender = Column(String(20))
     date_of_birth = Column(Date)
@@ -34,18 +32,20 @@ class WorkerProfile(Base):
     address = Column(Text)
     city = Column(String(100))
     state = Column(String(100))
-    pin_code = Column(String(10))
+    pincode = Column(String(10))
 
-    skill = Column(String(100))
-    experience = Column(Integer)
+    category_id = Column(Integer)
 
-    salary = Column(Numeric(10, 2))
+    experience_years = Column(Integer)
 
-    joining_date = Column(Date)
+    skills = Column(Text)
+
+    about = Column(Text)
+
+    aadhaar_number = Column(String(20))
 
     status = Column(String(20))
 
-    aadhaar_number = Column(String(20))
-    pan_number = Column(String(20))
-
-    profile_photo = Column(Text)
+    profile_image = Column(Text)
+    aadhaar_front = Column(Text)
+    aadhaar_back = Column(Text)

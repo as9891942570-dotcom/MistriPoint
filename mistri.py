@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
-from database import SessionLocal
+from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
-from models import User, WorkerProfile
+from models import User, Worker
 app = FastAPI()
 
 
@@ -155,31 +155,44 @@ def logout(user_id: int):
 
 
 
+from fastapi import Depends, HTTPException
+from sqlalchemy.orm import Session
+
 @app.post("/worker-profile")
 def create_worker_profile(
-    data: WorkerProfileSchema
+    data: WorkerProfileSchema,
+    db: Session = Depends(get_db)
 ):
 
-    db = SessionLocal()
+    worker = Worker(
+        name=data.name,
+        email=data.email,
+        mobile=data.mobile,
+        gender=data.gender,
+        date_of_birth=data.date_of_birth,
+        address=data.address,
+        city=data.city,
+        state=data.state,
+        pincode=data.pincode,
+        category_id=data.category_id,
+        experience_years=data.experience_years,
+        skills=data.skills,
+        about=data.about,
+        aadhaar_number=data.aadhaar_number,
+        status="Pending",
+        profile_image=data.profile_image,
+        aadhaar_front=data.aadhaar_front,
+        aadhaar_back=data.aadhaar_back
+    )
 
-    try:
+    db.add(worker)
+    db.commit()
+    db.refresh(worker)
 
-        profile = WorkerProfile(
-            **data.dict()
-        )
-
-        db.add(profile)
-        db.commit()
-
-        return {
-            "message":
-            "Worker Profile Created Successfully"
-        }
-
-    finally:
-        db.close()
-
-
+    return {
+        "message": "Worker Profile Created Successfully",
+        "worker_id": worker.id
+    }
 @app.get("/worker-profile/{user_id}")
 def get_worker_profile(user_id: int):
 
@@ -188,9 +201,9 @@ def get_worker_profile(user_id: int):
     try:
 
         profile = db.query(
-            WorkerProfile
+            Worker
         ).filter(
-            WorkerProfile.user_id == user_id
+            Worker.user_id == user_id
         ).first()
 
         if not profile:
@@ -213,11 +226,10 @@ def update_worker_profile(
     db = SessionLocal()
 
     try:
-
         profile = db.query(
-            WorkerProfile
+            Worker
         ).filter(
-            WorkerProfile.user_id == user_id
+            Worker.user_id == user_id
         ).first()
 
         if not profile:
@@ -245,13 +257,11 @@ def delete_worker_profile(user_id: int):
     db = SessionLocal()
 
     try:
-
         profile = db.query(
-            WorkerProfile
+            Worker
         ).filter(
-            WorkerProfile.user_id == user_id
+            Worker.user_id == user_id
         ).first()
-
         if not profile:
             raise HTTPException(
                 status_code=404,

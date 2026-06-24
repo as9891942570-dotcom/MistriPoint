@@ -22,30 +22,28 @@ class Labour(BaseModel):
     skill: str
 
 class WorkerProfileSchema(BaseModel):
-        user_id: int
+    name: str
+    email: str
+    mobile: str
 
-        name: str
-        mobile: str
-        email: Optional[str] = None
+    gender: str
+    date_of_birth: date
 
-        gender: Optional[str] = None
-        date_of_birth: Optional[date] = None
+    address: str
+    city: str
+    state: str
+    pincode: str
 
-        address: Optional[str] = None
-        city: Optional[str] = None
-        state: Optional[str] = None
-        pin_code: Optional[str] = None
+    category_id: int
 
-        skill: Optional[str] = None
-        experience: Optional[int] = 0
+    experience_years: int
 
-        salary: Optional[float] = None
+    skills: str
 
-        joining_date: Optional[date] = None
+    about: str
 
-        status: Optional[str] = "Active"
+    aadhaar_number: str
 
-        aadhaar_number: Optional[str] = None
-        pan_number: Optional[str] = None
-
-        profile_photo: Optional[str] = None
+    profile_image: str
+    aadhaar_front: str
+    aadhaar_back: str
