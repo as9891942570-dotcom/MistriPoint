@@ -210,6 +210,26 @@ def get_worker_profile(worker_id: int):
 
     finally:
         db.close()
+
+@app.get("/worker-profiles")
+def get_all_worker_profiles():
+
+    db = SessionLocal()
+
+    try:
+        workers = db.query(Worker).all()
+
+        if not workers:
+            raise HTTPException(
+                status_code=404,
+                detail="No workers found"
+            )
+
+        return workers
+
+    finally:
+        db.close()
+
 @app.put("/worker-profile/{worker_id}")
 def update_worker_profile(worker_id: int, worker_data: WorkerCreate):
 
