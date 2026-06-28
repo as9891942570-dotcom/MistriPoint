@@ -1,7 +1,9 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Numeric, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Numeric, Text, Float, ForeignKey
 
 from sqlalchemy.sql import func
 from database import Base
+
+
 
 class User(Base):
     __tablename__ = "users"
@@ -45,7 +47,26 @@ class Worker(Base):
     aadhaar_number = Column(String(20))
 
     status = Column(String(20))
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    is_available = Column(Boolean, default=True)
+    working_radius = Column(Integer)
+    preferred_area = Column(String(255))
 
     profile_image = Column(Text)
     aadhaar_front = Column(Text)
     aadhaar_back = Column(Text)
+
+class Skill(Base):
+    __tablename__ = "skills"
+
+    id = Column(Integer, primary_key=True, index=True)
+    skill_name = Column(String(100), unique=True, nullable=False)
+
+
+class WorkerSkill(Base):
+    __tablename__ = "worker_skills"
+
+    id = Column(Integer, primary_key=True, index=True)
+    worker_id = Column(Integer, ForeignKey("workers.id"))
+    skill_id = Column(Integer, ForeignKey("skills.id"))

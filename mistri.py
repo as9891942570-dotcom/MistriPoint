@@ -5,6 +5,8 @@ from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
 from models import User, Worker
+from models import Skill, WorkerSkill, Worker
+from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate
 app = FastAPI()
 
 
@@ -299,3 +301,219 @@ def delete_worker_profile(worker_id: int):
 
     finally:
         db.close()
+@app.put("/worker-location/{worker_id}")
+def update_worker_location(
+    worker_id: int,
+    data: WorkerLocation,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    worker.latitude = data.latitude
+    worker.longitude = data.longitude
+
+    db.commit()
+    db.refresh(worker)
+
+    return {
+        "message": "Location updated successfully",
+        "worker": worker
+    }
+@app.put("/worker-availability/{worker_id}")
+def update_worker_availability(
+    worker_id: int,
+    data: WorkerAvailability,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    worker.is_available = data.is_available
+
+    db.commit()
+    db.refresh(worker)
+
+    return {
+        "message": "Availability updated successfully",
+        "worker": worker
+    }
+@app.put("/worker-radius/{worker_id}")
+def update_worker_radius(
+    worker_id: int,
+    data: WorkerRadius,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(status_code=404, detail="Worker not found")
+
+    worker.working_radius = data.working_radius
+
+    db.commit()
+    db.refresh(worker)
+
+    return {
+        "message": "Working radius updated successfully",
+        "worker": worker
+    }
+@app.put("/worker-preferred-area/{worker_id}")
+def update_preferred_area(
+    worker_id: int,
+    data: WorkerPreferredArea,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(status_code=404, detail="Worker not found")
+
+    worker.preferred_area = data.preferred_area
+
+    db.commit()
+    db.refresh(worker)
+
+    return {
+        "message": "Preferred area updated successfully",
+        "worker": worker
+    }
+@app.post("/skills")
+def create_skill(
+    data: SkillCreate,
+    db: Session = Depends(get_db)
+):
+
+    skill = Skill(
+        skill_name=data.skill_name
+    )
+
+    db.add(skill)
+    db.commit()
+    db.refresh(skill)
+
+    return {
+        "message": "Skill Added Successfully",
+        "skill_id": skill.id
+    }
+@app.get("/skills")
+def get_skills(
+    db: Session = Depends(get_db)
+):
+
+    skills = db.query(Skill).all()
+
+    return skills
+@app.post("/worker-skills")
+def assign_skills(
+    data: WorkerSkillCreate,
+    db: Session = Depends(get_db)
+):
+
+    for skill_id in data.skill_ids:
+
+        worker_skill = WorkerSkill(
+            worker_id=data.worker_id,
+            skill_id=skill_id
+        )
+
+        db.add(worker_skill)
+
+    db.commit()
+
+    return {
+        "message": "Skills Assigned Successfully"
+    }
+@app.get("/worker-skills/{worker_id}")
+def get_worker_skills(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    skills = (
+        db.query(Skill.skill_name)
+        .join(
+            WorkerSkill,
+            Skill.id == WorkerSkill.skill_id
+        )
+        .filter(
+            WorkerSkill.worker_id == worker_id
+        )
+        .all()
+    )
+
+    return {
+        "worker_id": worker_id,
+        "skills": [s.skill_name for s in skills]
+    }
+@app.put("/worker-skills/{worker_id}")
+def update_worker_skills(
+    worker_id: int,
+    data: WorkerSkillUpdate,
+    db: Session = Depends(get_db)
+):
+
+    db.query(WorkerSkill).filter(
+        WorkerSkill.worker_id == worker_id
+    ).delete()
+
+    for skill_id in data.skill_ids:
+
+        db.add(
+            WorkerSkill(
+                worker_id=worker_id,
+                skill_id=skill_id
+            )
+        )
+
+    db.commit()
+
+    return {
+        "message": "Worker Skills Updated Successfully"
+    }
+@app.delete("/worker-skills/{worker_id}/{skill_id}")
+def delete_worker_skill(
+    worker_id: int,
+    skill_id: int,
+    db: Session = Depends(get_db)
+):
+
+    skill = db.query(WorkerSkill).filter(
+        WorkerSkill.worker_id == worker_id,
+        WorkerSkill.skill_id == skill_id
+    ).first()
+
+    if not skill:
+        raise HTTPException(
+            status_code=404,
+            detail="Skill Not Found"
+        )
+
+    db.delete(skill)
+    db.commit()
+
+    return {
+        "message": "Skill Deleted Successfully"
+    }
