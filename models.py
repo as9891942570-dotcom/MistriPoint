@@ -1,9 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Numeric, Text, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, Date, Numeric, Text, Float, ForeignKey, Time,DateTime
 
 from sqlalchemy.sql import func
 from database import Base
-
-
 
 class User(Base):
     __tablename__ = "users"
@@ -70,3 +68,40 @@ class WorkerSkill(Base):
     id = Column(Integer, primary_key=True, index=True)
     worker_id = Column(Integer, ForeignKey("workers.id"))
     skill_id = Column(Integer, ForeignKey("skills.id"))
+
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    customer_id = Column(Integer)
+
+    title = Column(String(150), nullable=False)
+    description = Column(Text)
+
+    category_id = Column(Integer, nullable=False)
+
+    address = Column(Text)
+    city = Column(String(100))
+    state = Column(String(100))
+    pincode = Column(String(10))
+
+    latitude = Column(Numeric(10, 8))
+    longitude = Column(Numeric(11, 8))
+
+    budget = Column(Numeric(10, 2))
+
+    job_date = Column(Date)
+    job_time = Column(Time)
+
+    status = Column(String(20), default="Open")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+

@@ -6,8 +6,13 @@ from schemas import *
 from security import hash_password, verify_password
 from models import User, Worker
 from models import Skill, WorkerSkill, Worker
-from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate
-app = FastAPI()
+from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate, WorkerStatusUpdate, AdminWorkerUpdate
+from models import Job
+from schemas import JobResponse
+
+
+
+app = FastAPI( redoc_url=None)
 
 
 @app.post("/register")
@@ -301,6 +306,8 @@ def delete_worker_profile(worker_id: int):
 
     finally:
         db.close()
+
+
 @app.put("/worker-location/{worker_id}")
 def update_worker_location(
     worker_id: int,
@@ -517,3 +524,201 @@ def delete_worker_skill(
     return {
         "message": "Skill Deleted Successfully"
     }
+@app.get("/jobs")
+def get_all_jobs(
+    db: Session = Depends(get_db)
+):
+
+    jobs = db.query(Job).all()
+
+    return jobs
+@app.get("/jobs/{job_id}")
+def get_job(
+    job_id: int,
+    db: Session = Depends(get_db)
+):
+
+    job = db.query(Job).filter(
+        Job.id == job_id
+    ).first()
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+        )
+
+    return job
+@app.get("/jobs/category/{category_id}")
+def get_jobs_by_category(
+    category_id: int,
+    db: Session = Depends(get_db)
+):
+
+    jobs = db.query(Job).filter(
+        Job.category_id == category_id,
+        Job.status == "Open"
+    ).all()
+
+    return jobs
+@app.get("/jobs/city/{city}")
+def get_jobs_by_city(
+    city: str,
+    db: Session = Depends(get_db)
+):
+
+    jobs = db.query(Job).filter(
+        Job.city == city,
+        Job.status == "Open"
+    ).all()
+
+    return jobs
+@app.get("/jobs/budget/{budget}")
+def get_jobs_by_budget(
+    budget: float,
+    db: Session = Depends(get_db)
+):
+
+    jobs = db.query(Job).filter(
+        Job.budget >= budget,
+        Job.status == "Open"
+    ).all()
+
+    return jobs
+@app.get("/jobs/nearby/{worker_id}")
+def nearby_jobs(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    jobs = db.query(Job).filter(
+        Job.status == "Open"
+    ).all()
+
+    return jobs
+@app.get("/admin/workers")
+def get_all_workers(db: Session = Depends(get_db)):
+
+    workers = db.query(Worker).all()
+
+    return {
+        "message": "All Workers",
+        "total_workers": len(workers),
+        "data": workers
+    }
+@app.get("/admin/workers/{worker_id}")
+def get_worker(worker_id: int, db: Session = Depends(get_db)):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    return {
+        "message": "Worker Details",
+        "data": worker
+    }
+@app.put("/admin/workers/{worker_id}")
+def update_worker(
+    worker_id: int,
+    data: AdminWorkerUpdate,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    worker.name = data.name
+    worker.email = data.email
+    worker.mobile = data.mobile
+    worker.gender = data.gender
+    worker.date_of_birth = data.date_of_birth
+    worker.address = data.address
+    worker.city = data.city
+    worker.state = data.state
+    worker.pincode = data.pincode
+    worker.category_id = data.category_id
+    worker.experience_years = data.experience_years
+    worker.skills = data.skills
+    worker.about = data.about
+    worker.aadhaar_number = data.aadhaar_number
+    worker.profile_image = data.profile_image
+    worker.aadhaar_front = data.aadhaar_front
+    worker.aadhaar_back = data.aadhaar_back
+
+    db.commit()
+    db.refresh(worker)
+
+    return {
+        "message": "Worker updated successfully",
+        "data": worker
+    }
+@app.put("/admin/workers/{worker_id}/status")
+def update_worker_status(
+    worker_id: int,
+    data: WorkerStatusUpdate,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    if data.status not in ["Pending", "Approved", "Rejected"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Status must be Pending, Approved or Rejected"
+        )
+
+    worker.status = data.status
+
+    db.commit()
+    db.refresh(worker)
+
+    return {
+        "message": "Worker status updated successfully",
+        "status": worker.status
+    }
+@app.delete("/admin/workers/{worker_id}")
+def delete_worker(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    db.delete(worker)
+    db.commit()
+
+    return {
+        "message": "Worker deleted successfully"
+    }
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("mistri:app", host="127.0.0.1", port=8000, reload=True)
