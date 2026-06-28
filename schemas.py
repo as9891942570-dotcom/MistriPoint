@@ -3,6 +3,8 @@ from datetime import date, time
 from typing import List
 from decimal import Decimal
 from typing import Optional
+from datetime import datetime
+
 
 class RegisterRequest(BaseModel):
     mobile: str
@@ -163,3 +165,64 @@ class AdminWorkerUpdate(BaseModel):
     profile_image: str
     aadhaar_front: str
     aadhaar_back: str
+class WorkerKYCCreate(BaseModel):
+
+    worker_id: int
+
+    aadhaar_number: str
+
+    pan_number: Optional[str] = None
+
+    account_holder_name: Optional[str] = None
+
+    bank_name: Optional[str] = None
+
+    account_number: Optional[str] = None
+
+    ifsc_code: Optional[str] = None
+
+    aadhaar_front: Optional[str] = None
+
+    aadhaar_back: Optional[str] = None
+
+    pan_card_image: Optional[str] = None
+
+    passbook_image: Optional[str] = None
+
+    selfie_image: Optional[str] = None
+class WorkerKYCResponse(BaseModel):
+
+    id: int
+
+    worker_id: int
+
+    aadhaar_number: str
+
+    pan_number: Optional[str]
+
+    account_holder_name: Optional[str]
+
+    bank_name: Optional[str]
+
+    account_number: Optional[str]
+
+    ifsc_code: Optional[str]
+
+    aadhaar_front: Optional[str]
+
+    aadhaar_back: Optional[str]
+
+    pan_card_image: Optional[str]
+
+    passbook_image: Optional[str]
+
+    selfie_image: Optional[str]
+
+    kyc_status: str
+
+    created_at: datetime
+
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, Date, Numeric, Text, Fl
 
 from sqlalchemy.sql import func
 from database import Base
+from datetime import datetime
 
 class User(Base):
     __tablename__ = "users"
@@ -105,3 +106,57 @@ class Job(Base):
         onupdate=func.now()
     )
 
+class WorkerKYC(Base):
+
+    __tablename__ = "worker_kyc"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    worker_id = Column(
+        Integer,
+        ForeignKey("workers.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False
+    )
+
+    aadhaar_number = Column(
+        String(12),
+        unique=True,
+        nullable=False
+    )
+
+    pan_number = Column(String(10))
+
+    account_holder_name = Column(String(100))
+
+    bank_name = Column(String(100))
+
+    account_number = Column(String(30))
+
+    ifsc_code = Column(String(15))
+
+    aadhaar_front = Column(String(255))
+
+    aadhaar_back = Column(String(255))
+
+    pan_card_image = Column(String(255))
+
+    passbook_image = Column(String(255))
+
+    selfie_image = Column(String(255))
+
+    kyc_status = Column(
+        String(20),
+        default="Pending"
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )

@@ -5,9 +5,10 @@ from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
 from models import User, Worker
-from models import Skill, WorkerSkill, Worker
-from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate, WorkerStatusUpdate, AdminWorkerUpdate
+from models import Skill, WorkerSkill, Worker, WorkerKYC
+from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate, WorkerStatusUpdate, AdminWorkerUpdate, WorkerKYCCreate
 from models import Job
+
 from schemas import JobResponse
 
 
@@ -718,6 +719,78 @@ def delete_worker(
 
     return {
         "message": "Worker deleted successfully"
+    }
+@app.post("/worker-kyc")
+def upload_worker_kyc(
+    data: WorkerKYCCreate,
+    db: Session = Depends(get_db)
+):
+
+
+    worker = db.query(Worker).filter(
+        Worker.id == data.worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+
+    existing_kyc = db.query(WorkerKYC).filter(
+        WorkerKYC.worker_id == data.worker_id
+    ).first()
+
+    if existing_kyc:
+        raise HTTPException(
+            status_code=400,
+            detail="KYC already uploaded"
+        )
+
+    kyc = WorkerKYC(
+        worker_id=data.worker_id,
+        aadhaar_number=data.aadhaar_number,
+        pan_number=data.pan_number,
+        account_holder_name=data.account_holder_name,
+        bank_name=data.bank_name,
+        account_number=data.account_number,
+        ifsc_code=data.ifsc_code,
+        aadhaar_front=data.aadhaar_front,
+        aadhaar_back=data.aadhaar_back,
+        pan_card_image=data.pan_card_image,
+        passbook_image=data.passbook_image,
+        selfie_image=data.selfie_image,
+        kyc_status="Pending"
+    )
+
+    db.add(kyc)
+    db.commit()
+    db.refresh(kyc)
+
+    return {
+        "message": "KYC Uploaded Successfully",
+        "data": kyc
+    }
+@app.get("/worker-kyc/{worker_id}")
+def get_worker_kyc(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    kyc = db.query(WorkerKYC).filter(
+        WorkerKYC.worker_id == worker_id
+    ).first()
+
+    if not kyc:
+        raise HTTPException(
+            status_code=404,
+            detail="KYC not found"
+        )
+
+    return {
+        "message": "Worker KYC Details",
+        "data": kyc
     }
 if __name__ == "__main__":
     import uvicorn
