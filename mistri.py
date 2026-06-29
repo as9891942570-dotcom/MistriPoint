@@ -5,7 +5,7 @@ from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
 from models import User, Worker
-from models import Skill, WorkerSkill, Worker, WorkerKYC
+from models import Skill, WorkerSkill, Worker, WorkerKYC, JobApplication
 from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate, WorkerStatusUpdate, AdminWorkerUpdate, WorkerKYCCreate
 from models import Job
 
@@ -791,6 +791,141 @@ def get_worker_kyc(
     return {
         "message": "Worker KYC Details",
         "data": kyc
+    }
+
+
+@app.get("/worker-kyc")
+def get_all_worker_kyc(
+    db: Session = Depends(get_db)
+):
+
+    kyc_list = db.query(WorkerKYC).all()
+
+    if not kyc_list:
+        raise HTTPException(
+            status_code=404,
+            detail="No KYC records found"
+        )
+
+    return {
+        "message": "All Worker KYC Details",
+        "total_records": len(kyc_list),
+        "data": kyc_list
+    }
+@app.post("/job-applications")
+def apply_job(
+    application: JobApplicationCreate,
+    db: Session = Depends(get_db)
+):
+
+    # Check Job
+    job = db.query(Job).filter(
+        Job.id == application.job_id
+    ).first()
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+        )
+
+    # Check Worker
+    worker = db.query(Worker).filter(
+        Worker.id == application.worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    # Prevent duplicate application
+    existing = db.query(JobApplication).filter(
+        JobApplication.job_id == application.job_id,
+        JobApplication.worker_id == application.worker_id
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Already applied for this job"
+        )
+
+    new_application = JobApplication(
+        job_id=application.job_id,
+        worker_id=application.worker_id,
+        message=application.message,
+        expected_price=application.expected_price,
+        status="Pending"
+    )
+
+    db.add(new_application)
+    db.commit()
+    db.refresh(new_application)
+
+    return {
+        "message": "Job applied successfully",
+        "data": new_application
+    }
+@app.get("/job-applications/{worker_id}")
+def get_worker_applications(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    applications = db.query(JobApplication).filter(
+        JobApplication.worker_id == worker_id
+    ).all()
+
+    if not applications:
+        raise HTTPException(
+            status_code=404,
+            detail="No applications found"
+        )
+
+    return {
+        "total": len(applications),
+        "data": applications
+    }
+@app.get("/job-application/{application_id}")
+def get_application(
+    application_id: int,
+    db: Session = Depends(get_db)
+):
+
+    application = db.query(JobApplication).filter(
+        JobApplication.id == application_id
+    ).first()
+
+    if not application:
+        raise HTTPException(
+            status_code=404,
+            detail="Application not found"
+        )
+
+    return application
+@app.delete("/job-applications/{application_id}")
+def delete_application(
+    application_id: int,
+    db: Session = Depends(get_db)
+):
+
+    application = db.query(JobApplication).filter(
+        JobApplication.id == application_id
+    ).first()
+
+    if not application:
+        raise HTTPException(
+            status_code=404,
+            detail="Application not found"
+        )
+
+    db.delete(application)
+    db.commit()
+
+    return {
+        "message": "Application withdrawn successfully"
     }
 if __name__ == "__main__":
     import uvicorn

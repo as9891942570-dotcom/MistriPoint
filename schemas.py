@@ -226,3 +226,34 @@ class WorkerKYCResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class JobApplicationCreate(BaseModel):
+
+    job_id: int
+
+    worker_id: int
+
+    message: Optional[str] = None
+
+    expected_price: float
+
+
+class JobApplicationResponse(BaseModel):
+
+    id: int
+
+    job_id: int
+
+    worker_id: int
+
+    message: Optional[str]
+
+    expected_price: float
+
+    status: str
+
+    applied_at: datetime
+
+    class Config:
+        from_attributes = True

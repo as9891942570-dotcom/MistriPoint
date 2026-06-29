@@ -160,3 +160,41 @@ class WorkerKYC(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow
     )
+
+class JobApplication(Base):
+
+    __tablename__ = "job_applications"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    job_id = Column(
+        Integer,
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    worker_id = Column(
+        Integer,
+        ForeignKey("workers.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    message = Column(Text)
+
+    expected_price = Column(
+        Numeric(10,2)
+    )
+
+    status = Column(
+        String(20),
+        default="Pending"
+    )
+
+    applied_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
