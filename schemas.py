@@ -300,9 +300,34 @@ class BookingResponse(BaseModel):
 
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+class Config:
+    from_attributes = True
 
 class BookingStatusUpdate(BaseModel):
 
     booking_status: str
+
+class ReviewCreate(BaseModel):
+
+    booking_id: int
+
+    rating: int
+
+    review: str
+
+class ReviewResponse(BaseModel):
+
+    id: int
+
+    worker_id: int
+
+    job_id: int
+
+    rating: int
+
+    review: Optional[str]
+
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

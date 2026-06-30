@@ -257,3 +257,30 @@ class Booking(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow
     )
+class Review(Base):
+
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    booking_id = Column(
+        Integer,
+        ForeignKey("bookings.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False
+    )
+
+    worker_id = Column(
+        Integer,
+        ForeignKey("workers.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    rating = Column(Integer, nullable=False)
+
+    review = Column(Text)
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )

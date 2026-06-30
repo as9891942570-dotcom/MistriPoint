@@ -5,7 +5,7 @@ from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
 from models import User, Worker
-from models import Skill, WorkerSkill, Worker, WorkerKYC, JobApplication, Booking
+from models import Skill, WorkerSkill, Worker, WorkerKYC, JobApplication, Booking,Review
 from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate, WorkerStatusUpdate, AdminWorkerUpdate, WorkerKYCCreate
 from models import Job
 
@@ -1222,6 +1222,96 @@ def worker_dashboard(
         "rejected_bookings": rejected_bookings,
 
         "total_earnings": float(total_earnings)
+    }
+@app.post("/reviews")
+def add_review(
+    data: ReviewCreate,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == data.booking_id
+    ).first()
+
+    if not booking:
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
+
+    if booking.booking_status != "Completed":
+        raise HTTPException(
+            status_code=400,
+            detail="Review can only be given after job completion"
+        )
+
+    existing_review = db.query(Review).filter(
+        Review.booking_id == data.booking_id
+    ).first()
+
+    if existing_review:
+        raise HTTPException(
+            status_code=400,
+            detail="Review already submitted for this booking"
+        )
+
+    new_review = Review(
+
+        booking_id=booking.id,
+
+        worker_id=booking.worker_id,
+
+        rating=data.rating,
+
+        review=data.review
+
+    )
+
+    db.add(new_review)
+
+    db.commit()
+
+    db.refresh(new_review)
+
+    return {
+        "message": "Review submitted successfully",
+        "data": new_review
+    }
+@app.get("/worker-reviews/{worker_id}")
+def worker_reviews(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    reviews = db.query(Review).filter(
+        Review.worker_id == worker_id
+    ).all()
+
+    return reviews
+@app.get("/worker-rating/{worker_id}")
+def worker_rating(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    average = db.query(
+        func.avg(Review.rating)
+    ).filter(
+        Review.worker_id == worker_id
+    ).scalar()
+
+    total = db.query(Review).filter(
+        Review.worker_id == worker_id
+    ).count()
+
+    return {
+
+        "worker_id": worker_id,
+
+        "average_rating": round(float(average),2) if average else 0,
+
+        "total_reviews": total
+
     }
 
 if __name__ == "__main__":
