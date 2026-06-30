@@ -331,3 +331,29 @@ class ReviewResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class NotificationCreate(BaseModel):
+
+    worker_id: int
+
+    title: str
+
+    message: str
+class NotificationResponse(BaseModel):
+
+    id: int
+
+    worker_id: int
+
+    title: str
+
+    message: str
+
+    is_read: bool
+
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+class NotificationRead(BaseModel):
+
+    is_read: bool

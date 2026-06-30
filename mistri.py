@@ -5,6 +5,8 @@ from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
 from models import User, Worker
+from models import Notification, Worker
+from schemas import NotificationCreate
 from models import Skill, WorkerSkill, Worker, WorkerKYC, JobApplication, Booking,Review
 from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate, WorkerStatusUpdate, AdminWorkerUpdate, WorkerKYCCreate
 from models import Job
@@ -1312,6 +1314,130 @@ def worker_rating(
 
         "total_reviews": total
 
+    }
+@app.post("/notifications")
+def create_notification(
+    notification: NotificationCreate,
+    db: Session = Depends(get_db)
+):
+
+    worker = db.query(Worker).filter(
+        Worker.id == notification.worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    new_notification = Notification(
+        worker_id=notification.worker_id,
+        title=notification.title,
+        message=notification.message,
+        is_read=False
+    )
+
+    db.add(new_notification)
+
+    db.commit()
+
+    db.refresh(new_notification)
+
+    return {
+        "message": "Notification created successfully",
+        "data": new_notification
+    }
+@app.get("/notifications/{worker_id}")
+def get_notifications(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    notifications = db.query(Notification).filter(
+        Notification.worker_id == worker_id
+    ).order_by(
+        Notification.created_at.desc()
+    ).all()
+
+    if not notifications:
+        raise HTTPException(
+            status_code=404,
+            detail="No notifications found"
+        )
+
+    return {
+        "total_notifications": len(notifications),
+        "data": notifications
+    }
+@app.put("/notifications/{notification_id}/read")
+def mark_as_read(
+    notification_id: int,
+    db: Session = Depends(get_db)
+):
+
+    notification = db.query(Notification).filter(
+        Notification.id == notification_id
+    ).first()
+
+    if not notification:
+        raise HTTPException(
+            status_code=404,
+            detail="Notification not found"
+        )
+
+    if notification.is_read:
+        return {
+            "message": "Notification already marked as read"
+        }
+
+    notification.is_read = True
+
+    db.commit()
+
+    db.refresh(notification)
+
+    return {
+        "message": "Notification marked as read",
+        "data": notification
+    }
+@app.delete("/notifications/{notification_id}")
+def delete_notification(
+    notification_id: int,
+    db: Session = Depends(get_db)
+):
+
+    notification = db.query(Notification).filter(
+        Notification.id == notification_id
+    ).first()
+
+    if not notification:
+        raise HTTPException(
+            status_code=404,
+            detail="Notification not found"
+        )
+
+    db.delete(notification)
+
+    db.commit()
+
+    return {
+        "message": "Notification deleted successfully"
+    }
+@app.get("/notifications/{worker_id}/count")
+def unread_notification_count(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    unread = db.query(Notification).filter(
+        Notification.worker_id == worker_id,
+        Notification.is_read == False
+    ).count()
+
+    return {
+        "worker_id": worker_id,
+        "unread_notifications": unread
     }
 
 if __name__ == "__main__":
