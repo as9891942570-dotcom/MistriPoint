@@ -5,7 +5,7 @@ from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
 from models import User, Worker
-from models import Skill, WorkerSkill, Worker, WorkerKYC, JobApplication
+from models import Skill, WorkerSkill, Worker, WorkerKYC, JobApplication, Booking
 from schemas import SkillCreate, WorkerSkillCreate, WorkerSkillUpdate, WorkerStatusUpdate, AdminWorkerUpdate, WorkerKYCCreate
 from models import Job
 
@@ -927,6 +927,235 @@ def delete_application(
     return {
         "message": "Application withdrawn successfully"
     }
+@app.post("/bookings")
+def create_booking(
+    booking: BookingCreate,
+    db: Session = Depends(get_db)
+):
+
+    application = db.query(JobApplication).filter(
+        JobApplication.id == booking.job_application_id
+    ).first()
+
+    if not application:
+        raise HTTPException(
+            status_code=404,
+            detail="Job Application not found"
+        )
+
+    job = db.query(Job).filter(
+        Job.id == booking.job_id
+    ).first()
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+        )
+
+    worker = db.query(Worker).filter(
+        Worker.id == booking.worker_id
+    ).first()
+
+    if not worker:
+        raise HTTPException(
+            status_code=404,
+            detail="Worker not found"
+        )
+
+    new_booking = Booking(
+
+        job_application_id=booking.job_application_id,
+
+        job_id=booking.job_id,
+
+        worker_id=booking.worker_id,
+
+        booking_date=booking.booking_date,
+
+        booking_time=booking.booking_time,
+
+        address=booking.address,
+
+        amount=booking.amount,
+
+        payment_status="Pending",
+
+        booking_status="Pending"
+
+    )
+
+    db.add(new_booking)
+
+    db.commit()
+
+    db.refresh(new_booking)
+
+    return {
+        "message": "Booking Created Successfully",
+        "data": new_booking
+    }
+@app.get("/worker-bookings/{worker_id}")
+def get_worker_bookings(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    bookings = db.query(Booking).filter(
+        Booking.worker_id == worker_id
+    ).all()
+
+    if not bookings:
+
+        raise HTTPException(
+            status_code=404,
+            detail="No bookings found"
+        )
+
+    return bookings
+@app.get("/worker-booking/{booking_id}")
+def get_booking(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
+
+    return booking
+@app.put("/booking/{booking_id}/accept")
+def accept_booking(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
+
+    if booking.booking_status != "Pending":
+        raise HTTPException(
+            status_code=400,
+            detail="Only Pending bookings can be accepted"
+        )
+
+    booking.booking_status = "Accepted"
+
+    db.commit()
+    db.refresh(booking)
+
+    return {
+        "message": "Booking accepted successfully",
+        "status": booking.booking_status
+    }
+@app.put("/booking/{booking_id}/reject")
+def reject_booking(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
+
+    if booking.booking_status != "Pending":
+        raise HTTPException(
+            status_code=400,
+            detail="Only Pending bookings can be rejected"
+        )
+
+    booking.booking_status = "Rejected"
+
+    db.commit()
+    db.refresh(booking)
+
+    return {
+        "message": "Booking rejected successfully",
+        "status": booking.booking_status
+    }
+@app.put("/booking/{booking_id}/start")
+def start_work(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
+
+    if booking.booking_status != "Accepted":
+        raise HTTPException(
+            status_code=400,
+            detail="Only Accepted bookings can be started"
+        )
+
+    booking.booking_status = "In Progress"
+
+    db.commit()
+    db.refresh(booking)
+
+    return {
+        "message": "Work started successfully",
+        "status": booking.booking_status
+    }
+@app.put("/booking/{booking_id}/complete")
+def complete_work(
+    booking_id: int,
+    db: Session = Depends(get_db)
+):
+
+    booking = db.query(Booking).filter(
+        Booking.id == booking_id
+    ).first()
+
+    if not booking:
+        raise HTTPException(
+            status_code=404,
+            detail="Booking not found"
+        )
+
+    if booking.booking_status != "In Progress":
+        raise HTTPException(
+            status_code=400,
+            detail="Work must be in progress before completing"
+        )
+
+    booking.booking_status = "Completed"
+
+    db.commit()
+    db.refresh(booking)
+
+    return {
+        "message": "Work completed successfully",
+        "status": booking.booking_status
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("mistri:app", host="127.0.0.1", port=8000, reload=True)

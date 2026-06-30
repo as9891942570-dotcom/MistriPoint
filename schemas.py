@@ -257,3 +257,52 @@ class JobApplicationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class BookingCreate(BaseModel):
+
+    job_application_id: int
+
+    job_id: int
+
+    worker_id: int
+
+    booking_date: date
+
+    booking_time: time
+
+    address: str
+
+    amount: float
+
+class BookingResponse(BaseModel):
+
+    id: int
+
+    job_application_id: int
+
+    job_id: int
+
+    worker_id: int
+
+    booking_date: date
+
+    booking_time: time
+
+    address: str
+
+    amount: float
+
+    payment_status: str
+
+    booking_status: str
+
+    created_at: datetime
+
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class BookingStatusUpdate(BaseModel):
+
+    booking_status: str

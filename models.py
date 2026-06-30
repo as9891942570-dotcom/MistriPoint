@@ -198,3 +198,62 @@ class JobApplication(Base):
         DateTime,
         default=datetime.utcnow
     )
+
+class Booking(Base):
+
+    __tablename__ = "bookings"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    job_application_id = Column(
+        Integer,
+        ForeignKey("job_applications.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    job_id = Column(
+        Integer,
+        ForeignKey("jobs.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    worker_id = Column(
+        Integer,
+        ForeignKey("workers.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    booking_date = Column(Date)
+
+    booking_time = Column(Time)
+
+    address = Column(Text)
+
+    amount = Column(
+        Numeric(10,2)
+    )
+
+    payment_status = Column(
+        String(20),
+        default="Pending"
+    )
+
+    booking_status = Column(
+        String(20),
+        default="Pending"
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
