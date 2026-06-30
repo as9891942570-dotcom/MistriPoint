@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
-
+from sqlalchemy import func
 from database import SessionLocal, get_db
 from schemas import *
 from security import hash_password, verify_password
@@ -1154,6 +1154,74 @@ def complete_work(
     return {
         "message": "Work completed successfully",
         "status": booking.booking_status
+    }
+@app.get("/worker-dashboard/{worker_id}")
+def worker_dashboard(
+    worker_id: int,
+    db: Session = Depends(get_db)
+):
+
+    total_jobs_applied = db.query(JobApplication).filter(
+        JobApplication.worker_id == worker_id
+    ).count()
+
+    total_bookings = db.query(Booking).filter(
+        Booking.worker_id == worker_id
+    ).count()
+
+    pending_bookings = db.query(Booking).filter(
+        Booking.worker_id == worker_id,
+        Booking.booking_status == "Pending"
+    ).count()
+
+    accepted_bookings = db.query(Booking).filter(
+        Booking.worker_id == worker_id,
+        Booking.booking_status == "Accepted"
+    ).count()
+
+    in_progress_bookings = db.query(Booking).filter(
+        Booking.worker_id == worker_id,
+        Booking.booking_status == "In Progress"
+    ).count()
+
+    completed_bookings = db.query(Booking).filter(
+        Booking.worker_id == worker_id,
+        Booking.booking_status == "Completed"
+    ).count()
+
+    rejected_bookings = db.query(Booking).filter(
+        Booking.worker_id == worker_id,
+        Booking.booking_status == "Rejected"
+    ).count()
+
+    total_earnings = db.query(
+        func.sum(Booking.amount)
+    ).filter(
+        Booking.worker_id == worker_id,
+        Booking.booking_status == "Completed"
+    ).scalar()
+
+    if total_earnings is None:
+        total_earnings = 0
+
+    return {
+        "worker_id": worker_id,
+
+        "total_jobs_applied": total_jobs_applied,
+
+        "total_bookings": total_bookings,
+
+        "pending_bookings": pending_bookings,
+
+        "accepted_bookings": accepted_bookings,
+
+        "in_progress_bookings": in_progress_bookings,
+
+        "completed_bookings": completed_bookings,
+
+        "rejected_bookings": rejected_bookings,
+
+        "total_earnings": float(total_earnings)
     }
 
 if __name__ == "__main__":
