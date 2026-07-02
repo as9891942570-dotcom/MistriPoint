@@ -1348,28 +1348,28 @@ def create_notification(
         "message": "Notification created successfully",
         "data": new_notification
     }
-@app.get("/notifications/{worker_id}")
-def get_notifications(
-    worker_id: int,
-    db: Session = Depends(get_db)
-):
-
-    notifications = db.query(Notification).filter(
-        Notification.worker_id == worker_id
-    ).order_by(
-        Notification.created_at.desc()
-    ).all()
-
-    if not notifications:
-        raise HTTPException(
-            status_code=404,
-            detail="No notifications found"
-        )
-
-    return {
-        "total_notifications": len(notifications),
-        "data": notifications
-    }
+# @app.get("/notifications/{worker_id}")
+# def get_notifications(
+#     worker_id: int,
+#     db: Session = Depends(get_db)
+# ):
+#
+#     notifications = db.query(Notification).filter(
+#         Notification.worker_id == worker_id
+#     ).order_by(
+#         Notification.created_at.desc()
+#     ).all()
+#
+#     if not notifications:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="No notifications found"
+#         )
+#
+#     return {
+#         "total_notifications": len(notifications),
+#         "data": notifications
+#     }
 @app.put("/notifications/{notification_id}/read")
 def mark_as_read(
     notification_id: int,

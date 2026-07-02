@@ -355,5 +355,4 @@ class NotificationResponse(BaseModel):
     class Config:
         from_attributes = True
 class NotificationRead(BaseModel):
-
     is_read: bool
